@@ -183,12 +183,3 @@ function querySaver(options = defaultOptions) {
 }
 
 document.addEventListener('DOMContentLoaded', querySaver)
-
-// TODO:
-// Move everything to window object and close from global scope
-// Add expiration time and option for model to store
-// Add replacement option on/off (global)
-// Add query replacement all / specific tags
-// Add query specific only tags to replace
-// Add links to replace all over the page off / on
-// Add cookies storage
