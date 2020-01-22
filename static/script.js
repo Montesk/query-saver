@@ -19,15 +19,6 @@
 
 
     window.mtQuerySaver = {
-        models: {
-            newStorageModel: function () {
-                return {
-                    query: null,
-                    createdAt: "",
-                }
-            }
-        },
-
         location: {
             setQueryParamsToLocation: function (queryModel) {
                 const currentUrl = new URL(location.href)
@@ -98,7 +89,7 @@
             }
         },
 
-        queryModule: {
+        query: {
             hasQuery: function (searchQuery) {
                 if (searchQuery === "") {
                     return false
@@ -137,7 +128,7 @@
 
             let utmModel = storage.getModel()
             if (!utmModel) {
-                const model = instance.models.newStorageModel()
+                const model = models.newStorageModel()
 
                 const saved = storage.setModel(storageKey, model, instance.queryModule)
                 if (!saved) return
@@ -150,8 +141,8 @@
     }
 })()
 
-function mtQuerySaver() {
-    window.mtQuerySaver.init(window.mtQuerySaver)
+function newMtQuerySaver() {
+    mtQuerySaver.init(mtQuerySaver)
 }
 
-document.addEventListener('DOMContentLoaded', mtQuerySaver)
+document.addEventListener('DOMContentLoaded', newMtQuerySaver)
