@@ -1,8 +1,11 @@
-### Simple search query saver
+### Simple url query saver
+Javascript storage url query saver. Session lifetime (session storage is used by default). No dependencies
+
+Dist code [script.js](https://github.com/Montesk/query-saver/blob/master/static/script.js)
 
 ## Roadmap:
 #### To 29/01/2020
-- Move everything to window object and close from global scope
+- Move to window object and close from global scope. **+**
 - Add expiration time and option for model to store
 - Add replacement option on/off (global)
 - Add query replacement all / specific tags
