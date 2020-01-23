@@ -25,6 +25,15 @@
         },
     }
 
+    // STATIC HELPERS
+    function isExpired (expiresAt) {
+        return Date.now() > expiresAt
+    }
+
+    function getStorageModelExpiresAt(model) {
+        const createdAt = new Date(model.createdAt)
+        return createdAt.setSeconds(createdAt.getSeconds() + model.lifeTimeSeconds)
+    }
 
     window.mtQuerySaver = {
         location: {
@@ -55,9 +64,24 @@
                 return this
             },
 
+            getStorage: function () {
+                switch (this.options.storage) {
+                    case storageTypes.sessionStorage:
+                        return sessionStorage
+                    case storageTypes.localStorage:
+                        return localStorage
+                    default:
+                        throw Error('Unknown storage type')
+                }
+            },
+
+            clearStorage: function () {
+                this.getStorage().clear()
+            },
+
             setModel: function (key, value, queryModule) {
                 const queryWithoutQuestionMark = location.search.substring(1)
-                const query = queryModule.parseQueryToObject(queryWithoutQuestionMark) // FIXME: don't use modules inside each other
+                const query = queryModule.parseQueryToObject(queryWithoutQuestionMark) // remove module inner dependency and injection
 
                 if (!query) return false
 
@@ -83,17 +107,6 @@
                 }
 
                 return result
-            },
-
-            getStorage: function () {
-                switch (this.options.storage) {
-                    case storageTypes.sessionStorage:
-                        return sessionStorage
-                    case storageTypes.localStorage:
-                        return localStorage
-                    default:
-                        throw Error('Unknown storage type')
-                }
             },
         },
 
@@ -136,11 +149,9 @@
                 function expirationHandler() {
                     if (!(this.storageModel.lifeTimeSeconds)) return
 
-                    const createdAt = new Date(this.storageModel.createdAt)
-                    const expiresAt = createdAt.setSeconds(createdAt.getSeconds() + this.storageModel.lifeTimeSeconds)
+                    const expiresAt = getStorageModelExpiresAt(this.storageModel)
 
-                    const isExpired = Date.now() > expiresAt
-                    if (isExpired) {
+                    if (isExpired(expiresAt)) {
                         this.modelExpirationInterval = clearInterval(this.modelExpirationInterval)
                         this.storage.clear()
                     }
@@ -175,7 +186,10 @@
 
             storageModel = storage.getModel()
 
-            // TODO: initial check if model expired
+            if (isExpired(getStorageModelExpiresAt(storageModel))) {
+                storage.clearStorage()
+                return
+            }
 
             this.location.setQueryParamsToLocation(storageModel.query)
 
