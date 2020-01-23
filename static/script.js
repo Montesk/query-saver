@@ -54,7 +54,7 @@
                 if (!query) return false
 
                 value.query = query
-                value.createdAt = Date.now()
+                value.createdAt = new Date()
 
                 this.getStorage().setItem(key, JSON.stringify(value))
 
@@ -130,7 +130,7 @@
             if (!utmModel) {
                 const model = models.newStorageModel()
 
-                const saved = storage.setModel(storageKey, model, instance.queryModule)
+                const saved = storage.setModel(storageKey, model, instance.query)
                 if (!saved) return
             }
 
