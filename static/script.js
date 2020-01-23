@@ -5,16 +5,24 @@
         localStorage: 2,
     }
 
-    const storageKey = "mt_utm_saver"
+    const checkExpirationInterval = 1000 // ms
+
+    const defaultOptions = {
+        storage: storageTypes.sessionStorage,
+        lifeTimeSeconds: 0, // no lifetime
+    }
+
+    const storageKey = 'mt_utm_saver'
 
     // MODELS
     const models = {
-        newStorageModel: function () {
+        newStorageModel: function (options) {
             return {
                 query: null,
-                createdAt: "",
+                createdAt: new Date(),
+                lifeTimeSeconds: options.lifeTimeSeconds,
             }
-        }
+        },
     }
 
 
@@ -32,13 +40,13 @@
                     currentUrl.searchParams.set(queryKey, queryValue)
                 }
 
-                history.pushState({"mt_utm_saver": queryModel}, "MT Query Saver", currentUrl.href)
+                history.pushState({'mt_utm_saver': queryModel}, 'MT Query Saver', currentUrl.href)
             },
         },
 
         storage: {
             options: {
-                storage: storageTypes.sessionStorage
+                storage: storageTypes.sessionStorage,
             },
 
             init(options) {
@@ -70,7 +78,7 @@
                 try {
                     result = JSON.parse(utmStorageModel)
                 } catch (e) {
-                    console.warn("Invalid utm storage model. Error: ", e)
+                    console.warn('Invalid utm storage model. Error: ', e)
                     return null
                 }
 
@@ -84,14 +92,14 @@
                     case storageTypes.localStorage:
                         return localStorage
                     default:
-                        throw Error("Unknown storage type")
+                        throw Error('Unknown storage type')
                 }
-            }
+            },
         },
 
         query: {
             hasQuery: function (searchQuery) {
-                if (searchQuery === "") {
+                if (searchQuery === '') {
                     return false
                 }
 
@@ -105,7 +113,7 @@
 
                 try {
                     result = JSON.parse('{"' + queryString.replace(/&/g, '","').replace(/=/g, '":"') + '"}', function (key, value) {
-                        return key === "" ? value : decodeURIComponent(value)
+                        return key === '' ? value : decodeURIComponent(value)
                     })
                 } catch (e) {
                     return null
@@ -119,30 +127,65 @@
             },
         },
 
-        init: function (instance) {
-            const defaultOptions = {
-                storage: storageTypes.sessionStorage,
+        workers: {
+            modelExpirationInterval: null,
+            storageModel: null,
+            storage: null,
+
+            checkModelExpiration: function () {
+                function expirationHandler() {
+                    if (!(this.storageModel.lifeTimeSeconds)) return
+
+                    const createdAt = new Date(this.storageModel.createdAt)
+                    const expiresAt = createdAt.setSeconds(createdAt.getSeconds() + this.storageModel.lifeTimeSeconds)
+
+                    const isExpired = Date.now() > expiresAt
+                    if (isExpired) {
+                        this.modelExpirationInterval = clearInterval(this.modelExpirationInterval)
+                        this.storage.clear()
+                    }
+                }
+
+                expirationHandler = expirationHandler.bind(this)
+
+                this.modelExpirationInterval = setInterval(expirationHandler, checkExpirationInterval)
+            },
+
+            // update model on change ?
+            init: function (storage) {
+                this.storageModel = storage.getModel()
+                this.storage = storage.getStorage()
+
+                this.checkModelExpiration()
             }
+        },
 
-            const storage = instance.storage.init(defaultOptions)
+        init: function (instance, options) {
+            options = {...defaultOptions, ...options}
 
-            let utmModel = storage.getModel()
-            if (!utmModel) {
-                const model = models.newStorageModel()
+            const storage = instance.storage.init(options)
+
+            let storageModel = storage.getModel()
+            if (!storageModel) {
+                const model = models.newStorageModel(options)
 
                 const saved = storage.setModel(storageKey, model, instance.query)
                 if (!saved) return
             }
 
-            utmModel = storage.getModel()
+            storageModel = storage.getModel()
 
-            this.location.setQueryParamsToLocation(utmModel.query)
-        }
+            // TODO: initial check if model expired
+
+            this.location.setQueryParamsToLocation(storageModel.query)
+
+            this.workers.init(storage)
+        },
     }
 })()
 
 function newMtQuerySaver() {
-    mtQuerySaver.init(mtQuerySaver)
+    mtQuerySaver.init(mtQuerySaver, {})
 }
 
 document.addEventListener('DOMContentLoaded', newMtQuerySaver)
