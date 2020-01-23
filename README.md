@@ -6,7 +6,7 @@ Dist code [script.js](https://github.com/Montesk/query-saver/blob/master/static/
 ## Roadmap:
 #### To 29/01/2020
 - [x] Move to window object and close from global scope
-- [ ] Add expiration time and option for model to store
+- [x] Add expiration time and option for model to store
 - [ ] Add replacement option on/off (global)
 - [ ] Add query replacement all / specific tags
 - [ ] Add query specific only tags to replace
