@@ -186,7 +186,7 @@
 
             storageModel = storage.getModel()
 
-            if (isExpired(getStorageModelExpiresAt(storageModel))) {
+            if (options.lifeTimeSeconds !== 0 && isExpired(getStorageModelExpiresAt(storageModel))) {
                 storage.clearStorage()
                 return
             }
@@ -199,7 +199,7 @@
 })()
 
 function newMtQuerySaver() {
-    mtQuerySaver.init(mtQuerySaver, {})
+    mtQuerySaver.init(mtQuerySaver, { lifeTimeSeconds: 0, storage: 1 })
 }
 
 document.addEventListener('DOMContentLoaded', newMtQuerySaver)
