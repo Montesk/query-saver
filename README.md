@@ -13,5 +13,5 @@ Dist code [script.js](https://github.com/Montesk/query-saver/blob/master/static/
 - [ ] Add links to replace all over the page off / on
 - [ ] Add cookies storage
 
-#### To 30/02/2020 (roadmap in progress)
+#### To 29/02/2020 (roadmap in progress)
 - [ ] Add code generator with basic web interface (write tasks)
